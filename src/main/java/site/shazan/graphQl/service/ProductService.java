@@ -20,4 +20,10 @@ public class ProductService {
         return productRepo.findByCategory(category);
     }
 
+    public Product updateStock(int id, int stock) {
+        Product product = productRepo.findById(id).orElseThrow(() -> new RuntimeException("Product not found"));
+        product.setStock(stock);
+        return productRepo.save(product);
+    }
+
 }
