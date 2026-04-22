@@ -1,26 +1,26 @@
 package site.shazan.graphQl.controller;
 
 import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.stereotype.Controller;
 import site.shazan.graphQl.models.Product;
 import site.shazan.graphQl.service.ProductService;
 
 import java.util.List;
 
-@RestController
+@Controller
 @AllArgsConstructor
 public class ProductController {
     private final ProductService productService;
 
-    @GetMapping("/products")
+    @QueryMapping(name = "getProducts")
     public List<Product> getAllProduct() {
         return productService.getAllProduct();
     }
 
-    @GetMapping("/products/{category}")
-    public List<Product> getProductByCategory(@PathVariable String category) {
+    @QueryMapping
+    public List<Product> getProductByCategory(@Argument String category) {
         return productService.getProductsByCategory(category);
     }
 
