@@ -1,77 +1,41 @@
 # GraphQL Product API
 
-A Spring Boot GraphQL application for managing products with a PostgreSQL database. This project demonstrates a modern GraphQL API implementation using Spring Boot 4.0.5 with integrated database operations.
+Spring Boot GraphQL application for managing products with PostgreSQL and Spring Data JPA.
 
-## Project Overview
+## Overview
 
-This application provides a GraphQL interface for querying and managing product information. It uses Spring Data JPA for database operations and PostgreSQL as the primary data store. The application includes GraphiQL interface for interactive query testing.
+This project exposes a small GraphQL API for reading products, filtering them by category, and updating stock. It also includes GraphiQL for interactive queries during development.
 
-## Features
-
-- GraphQL API for product queries
-- PostgreSQL database integration
-- GraphiQL interface for interactive queries
-- Product management with filtering by category
-- RESTful configuration with Spring Boot
-
-## Technology Stack
+## Tech stack
 
 - Java 25
 - Spring Boot 4.0.5
-- Spring Data JPA
 - Spring GraphQL
-- PostgreSQL Database
+- Spring Data JPA
+- PostgreSQL
 - Lombok
 - Maven
 
-## Project Structure
+## Data model
 
-```
-graphQl/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── site/shazan/graphQl/
-│   │   │       ├── GraphQlApplication.java          # Main application entry point
-│   │   │       ├── config/
-│   │   │       │   └── ProductDataSeeder.java       # Database initialization
-│   │   │       ├── controller/
-│   │   │       │   └── ProductController.java       # GraphQL controller
-│   │   │       ├── models/
-│   │   │       │   └── Product.java                 # Product entity
-│   │   │       ├── repo/
-│   │   │       │   └── ProductRepo.java             # Data repository
-│   │   │       └── service/
-│   │   │           └── ProductService.java          # Business logic
-│   │   └── resources/
-│   │       ├── application.yaml                     # Configuration file
-│   │       └── graphql/
-│   │           └── schema.graphqls                  # GraphQL schema definition
-│   └── test/
-│       └── java/site/shazan/graphQl/
-│           └── GraphQlApplicationTests.java         # Application tests
-└── pom.xml                                          # Maven configuration
+`Product` is the only persisted entity.
 
-```
+| Field | Java type | Notes |
+| --- | --- | --- |
+| `id` | `Integer` | Auto-generated database ID |
+| `name` | `String` | Product name |
+| `category` | `String` | Product category |
+| `price` | `Double` | Stored as a decimal value in Java |
+| `stock` | `Integer` | Current inventory count |
 
-## Database Schema
+## GraphQL schema
 
-### Product Entity
-
-| Field    | Type   | Description          |
-|----------|--------|----------------------|
-| id       | ID     | Unique identifier    |
-| name     | String | Product name         |
-| category | String | Product category     |
-| price    | Float  | Product price        |
-| stock    | Int    | Available stock      |
-
-## GraphQL Schema
+The schema is defined in `src/main/resources/graphql/schema.graphqls`.
 
 ### Queries
 
-#### getProducts
-Returns a list of all available products.
+#### `getProducts`
+Returns every product.
 
 ```graphql
 query {
@@ -85,12 +49,28 @@ query {
 }
 ```
 
-#### getProductByCategory
-Returns products filtered by category.
+#### `getProductByCategory(category: String)`
+Returns products that match the requested category.
 
 ```graphql
 query {
   getProductByCategory(category: "Electronics") {
+    id
+    name
+    price
+    stock
+  }
+}
+```
+
+### Mutation
+
+#### `updateStock(id: ID, stock: Int)`
+Updates the stock value for an existing product and returns the saved product.
+
+```graphql
+mutation {
+  updateStock(id: 1, stock: 25) {
     id
     name
     category
@@ -100,187 +80,82 @@ query {
 }
 ```
 
-## Getting Started
+## Run locally
 
 ### Prerequisites
 
-- Java 25 or higher
-- PostgreSQL 12 or higher
-- Maven 3.6 or higher
+- Java 25+
+- PostgreSQL running locally or remotely
 
-### Installation
+### Database configuration
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd graphQl
+The application reads these environment variables:
+
+- `DB_URL` — defaults to `jdbc:postgresql://localhost:5432/graphtest`
+- `DB_USERNAME` — defaults to `postgres`
+- `DB_PASSWORD` — defaults to `arpon007`
+
+Example PowerShell setup:
+
+```powershell
+$env:DB_URL = "jdbc:postgresql://localhost:5432/graphtest"
+$env:DB_USERNAME = "postgres"
+$env:DB_PASSWORD = "arpon007"
 ```
 
-2. Configure database connection in `application.yaml`:
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/graphtest
-    username: postgres
-    password: arpon007
+### Build
+
+```powershell
+.\mvnw.cmd clean package
 ```
 
-3. Build the project:
-```bash
-mvn clean install
+### Start the app
+
+```powershell
+.\mvnw.cmd spring-boot:run
 ```
 
-4. Run the application:
-```bash
-mvn spring-boot:run
-```
+The app starts on `http://localhost:8080`.
 
-The application will start on `http://localhost:8080`
+## Endpoints
 
-## Usage
-
-### GraphiQL Interface
-
-Access the interactive GraphQL interface at:
-```
-http://localhost:8080/graphiql
-```
-
-This provides a web-based IDE for writing and testing GraphQL queries.
-
-### API Endpoint
-
-The GraphQL API endpoint is available at:
-```
-http://localhost:8080/graphql
-```
-
-### Example Queries
-
-1. Get all products:
-```graphql
-{
-  getProducts {
-    id
-    name
-    category
-    price
-    stock
-  }
-}
-```
-
-2. Get products by category:
-```graphql
-{
-  getProductByCategory(category: "Electronics") {
-    id
-    name
-    price
-  }
-}
-```
+- GraphQL endpoint: `http://localhost:8080/graphql`
+- GraphiQL UI: `http://localhost:8080/graphiql`
 
 ## Configuration
 
-The application configuration is managed through `application.yaml`:
+Relevant settings are in `src/main/resources/application.yaml`:
 
-```yaml
-spring:
-  application:
-    name: graphQl
-  datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/graphtest}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:arpon007}
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    open-in-view: false
-    properties:
-      hibernate:
-        format_sql: true
-    show-sql: true
-  graphql:
-    graphiql:
-      enabled: true
-      path: /graphiql
+- JPA `ddl-auto` is set to `update`
+- SQL logging is enabled
+- GraphiQL is enabled at `/graphiql`
+
+## Testing
+
+The project currently includes a basic Spring Boot context load test.
+
+```powershell
+.\mvnw.cmd test
 ```
-
-### Environment Variables
-
-You can override default database configuration using environment variables:
-
-- `DB_URL`: Database connection URL
-- `DB_USERNAME`: Database username
-- `DB_PASSWORD`: Database password
-
-## Development
-
-### Building
-
-```bash
-mvn clean build
-```
-
-### Testing
-
-Run the test suite:
-```bash
-mvn test
-```
-
-### Logging
-
-SQL queries and Hibernate operations are logged at DEBUG and TRACE levels. Check the configuration in `application.yaml` for logging settings.
-
-## Troubleshooting
-
-### Database Connection Issues
-
-Ensure PostgreSQL is running and accessible:
-```bash
-psql -U postgres -d graphtest
-```
-
-### GraphQL Schema Not Found
-
-Verify that `schema.graphqls` exists in `src/main/resources/graphql/`
-
-### Port Already in Use
-
-Change the server port in `application.yaml`:
-```yaml
-server:
-  port: 8081
-```
-
-## Dependencies
-
-Key dependencies used in this project:
-
-- **spring-boot-starter-data-jpa**: JPA/Hibernate support
-- **spring-boot-starter-graphql**: Spring GraphQL integration
-- **spring-boot-starter-webmvc**: Spring MVC support
-- **postgresql**: PostgreSQL JDBC driver
-- **lombok**: Annotation processing for boilerplate reduction
-
-## License
-
-This project is provided as-is without any specific license.
-
-## Support
-
-For issues or questions, please refer to:
-- Spring Boot Documentation: https://spring.io/projects/spring-boot
-- Spring GraphQL Documentation: https://spring.io/projects/spring-graphql
-- GraphQL Documentation: https://graphql.org/learn/
 
 ## Notes
 
-- The application uses Hibernate's automatic schema updates (ddl-auto: update)
-- GraphiQL is enabled by default for development convenience
-- Lombok is used to reduce boilerplate code
-- The project follows Spring Boot best practices and conventions
+- `ProductDataSeeder.java` is currently commented out, so sample products are not seeded automatically.
+- The GraphQL `price` field is exposed as a float in the schema, while the Java entity uses `Double`.
+
+## Project structure
+
+```text
+src/main/java/site/shazan/graphQl/
+├── GraphQlApplication.java
+├── config/ProductDataSeeder.java
+├── controller/ProductController.java
+├── models/Product.java
+├── repo/ProductRepo.java
+└── service/ProductService.java
+```
+
+## License
+
+No license has been specified for this project.Just test project By Arpon.
 
