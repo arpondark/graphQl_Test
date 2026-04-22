@@ -10,15 +10,14 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 public class ProductService {
-    private ProductRepo productRepo;
+    private final ProductRepo productRepo;
 
-    public List<Product> findAll() {
+    public List<Product> getAllProduct() {
         return productRepo.findAll();
     }
 
     public List<Product> getProductsByCategory(String category) {
         return productRepo.findByCategory(category);
     }
-
 
 }
